@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AR 3D Model</title>
+  <!-- Замените строку загрузки webxr-polyfill.js на следующую -->
+  <script type="module" src="https://unpkg.com/webxr-polyfill/build/webxr-polyfill.module.js"></script>
+  <!-- Замените строку импорта Three.js на следующую -->
+  <script type="module" src="https://threejs.org/build/three.module.js"></script>
+</head>
+<body>
+  <script type="module">
+    import * as THREE from 'https://threejs.org/build/three.module.js';
+    import { GLTFLoader } from 'https://threejs.org/examples/jsm/loaders/GLTFLoader.js';
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer();
+    const light = new THREE.PointLight(0xFFFFFF, 1, 1000);
+
+    light.position.set(0, 0, 0);
+    scene.add(light);
+
+    // Замените на явный импорт GLTFLoader
+    const loader = new GLTFLoader();
+    let model;
+
+    // Обновите путь в соответствии с местоположением файла на Vercel
+    loader.load('/public/Delta.glb', (gltf) => {
+      model = gltf.scene;
+      scene.add(model);
+    });
+
+    camera.position.z = 5;
+
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    if ('xr' in navigator) {
+      navigator.xr.isSessionSupported('immersive-ar').then((supported) => {
+        if (supported) {
+          navigator.xr.requestSession('immersive-ar').then((session) => {
+            handleXRSession(session);
+          });
+        } else {
+          console.error('AR не поддерживается.');
+        }
+      });
+    } else {
+      console.error('WebXR не поддерживается в вашем браузере.');
+    }
+
+    function handleXRSession(session) {
+      const XRWebGLLayer = new XRWebGLLayer(session, renderer);
+
+      session.updateRenderState({ baseLayer: XRWebGLLayer });
+
+      session.requestAnimationFrame(onXRFrame);
+
+      function onXRFrame(time, frame) {
+        const xrViewerPose = frame.getViewerPose();
+        if (xrViewerPose) {
+          const xrView = xrViewerPose.views[0];
+          const pose = xrView.transform.matrix;
+
+          // Ваш код для обновления положения 3D-модели на основе данных pose
+
+          renderer.render(scene, camera);
+        }
+
+        session.requestAnimationFrame(onXRFrame);
+      }
+    }
+  </script>
+</body>
+</html>
