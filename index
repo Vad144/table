@@ -27,7 +27,7 @@
     let model;
 
     // Обновите путь в соответствии с местоположением файла на Vercel
-    loader.load('/public/Delta.glb', (gltf) => {
+    loader.load('/Delta.glb', (gltf) => {
       model = gltf.scene;
       scene.add(model);
     });
